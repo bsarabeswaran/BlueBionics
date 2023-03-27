@@ -317,7 +317,7 @@ void loop() {
   
   //Wait for muscle signal
   if(volt_reg >= STOP_THRESH){
-    while (smoothRead() < threshold) {
+    while (currAvg.updateAvg() < threshold) {
       //DEBUG
       //Serial.println(analogRead(MYO_PIN));
       // return; // check how long writing to LEDs is
@@ -336,6 +336,6 @@ void loop() {
     delay(PULSEWIDTH);
   
     // Wait until below relax threshold if not already
-    while (smoothRead() > threshold * RELAX_THRESH_MULTIPLIER) {}
+    while (currAvg.updateAvg() > threshold * RELAX_THRESH_MULTIPLIER) {}
   }
 }

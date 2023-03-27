@@ -58,6 +58,35 @@ void startupBlink() {
   }
 }
 
+struct movingAverage{
+  uint8_t arr[MOVING_AVERAGE_BUFFER] = {DEFAULT_RELAXTHRESH};
+  uint8_t counter = 0;
+  double sum = DEFAULT_RELAXTHRESH * arr.size();
+
+  //Returns one data point and updates average
+  unsigned updateAvg (){
+      //Take out oldest value from sum
+    sum -= arr[counter];
+
+    // Read in newest value and overwrite oldest
+    arr[counter] = analogRead(MYO_PIN);
+
+    // Update sum to reflect new value
+    sum += arr[counter];
+
+    //Increment counter and do modulo to make sure it wraps around
+    ++counter;
+    counter %= MOVING_AVERAGE_BUFFER;
+
+    //return average
+    return sum / arr.size();
+
+  }// updateAvg
+  
+
+}// movingAverage
+
+movingAverage currAvg;
 
 unsigned smoothRead () {
   unsigned sum = 0;
@@ -131,7 +160,7 @@ void toggleMotor() {
     deg = 0;
   }
   digitalWrite(MOSFET_PIN1,LOW);
-  while (smoothRead() > threshold * RELAX_THRESH_MULTIPLIER) { //worked with analogRead(MYO_PIN) > threshold()
+  while (currAvg.updateAvg(); > threshold * RELAX_THRESH_MULTIPLIER) { //worked with analogRead(MYO_PIN) > threshold()
     Serial.println("Waiting to reach relax threshold");
   }
 }
@@ -175,7 +204,7 @@ void setup() {
 
 void loop() {
    batteryCheck();
-   if(smoothRead() > threshold){
+   if(currAvg.updateAvg(); > threshold){
     toggleMotor();
     //delay(1000);
    }

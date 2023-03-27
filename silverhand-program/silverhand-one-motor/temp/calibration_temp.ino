@@ -208,9 +208,6 @@ void setup() {
   digitalWrite(MOSFET_PIN_TI,LOW);
   digitalWrite(MOSFET_PIN_MRP, LOW);
   Serial.begin(9600);
-
-  // Set up myopin
-  pinMode(MYO_PIN, INPUT);
   
   //Default the LED to off
   digitalWrite(LED_PIN_R, LOW);
