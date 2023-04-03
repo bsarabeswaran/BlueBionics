@@ -1,4 +1,4 @@
-// **ONE MOTOR CODE - LAST UPDATED 1/31/2023** //
+// **ONE MOTOR CODE - LAST UPDATED 3/30/2023** //
 
 #include <Servo.h>
 #define SERVO_PIN1 9//11
@@ -26,6 +26,9 @@
 #define SMOOTH_READS 8
 #define THRESH_MULTIPLIER 0.75
 #define RELAX_THRESH_MULTIPLIER 0.9
+
+#define MOVING_AVERAGE_BUFFER 8
+#define DEFAULT_RELAXTHRESH 275 // must be below 275 to be able to read another flex
 
 
 Servo myservo1;
@@ -61,7 +64,7 @@ void startupBlink() {
 struct movingAverage{
   uint8_t arr[MOVING_AVERAGE_BUFFER] = {DEFAULT_RELAXTHRESH};
   uint8_t counter = 0;
-  double sum = DEFAULT_RELAXTHRESH * arr.size();
+  double sum = DEFAULT_RELAXTHRESH * MOVING_AVERAGE_BUFFER;
 
   //Returns one data point and updates average
   unsigned updateAvg (){
@@ -70,7 +73,7 @@ struct movingAverage{
 
     // Read in newest value and overwrite oldest
     arr[counter] = analogRead(MYO_PIN);
-
+    Serial.println(arr[counter]);
     // Update sum to reflect new value
     sum += arr[counter];
 
@@ -79,12 +82,12 @@ struct movingAverage{
     counter %= MOVING_AVERAGE_BUFFER;
 
     //return average
-    return sum / arr.size();
+    return sum / MOVING_AVERAGE_BUFFER;
 
   }// updateAvg
   
 
-}// movingAverage
+};// movingAverage
 
 movingAverage currAvg;
 
@@ -104,7 +107,7 @@ void calibrate() {
   unsigned flex_max = 0; 
 
   while (millis() < end_time) {
-    unsigned flex_signal = analogRead(MYO_PIN);
+    unsigned flex_signal = currAvg.updateAvg();
     Serial.println(flex_signal);
     if (flex_signal > flex_max) {
       flex_max = flex_signal;
@@ -160,7 +163,7 @@ void toggleMotor() {
     deg = 0;
   }
   digitalWrite(MOSFET_PIN1,LOW);
-  while (currAvg.updateAvg(); > threshold * RELAX_THRESH_MULTIPLIER) { //worked with analogRead(MYO_PIN) > threshold()
+  while (currAvg.updateAvg() > threshold * RELAX_THRESH_MULTIPLIER) { //worked with analogRead(MYO_PIN) > threshold()
     Serial.println("Waiting to reach relax threshold");
   }
 }
@@ -204,7 +207,7 @@ void setup() {
 
 void loop() {
    batteryCheck();
-   if(currAvg.updateAvg(); > threshold){
+   if(currAvg.updateAvg() > threshold){
     toggleMotor();
     //delay(1000);
    }
