@@ -2,9 +2,9 @@ import random
 import matplotlib.pyplot as plt
 
 # Global Constants
-MOVING_AVERAGE_BUFFER = 8
+MOVING_AVERAGE_BUFFER = 16
 DEFAULT_RELAXTHRESH = 275
-SMOOTH_READS = 8
+SMOOTH_READS = 16
 
 rand_nums = []
 
@@ -18,7 +18,7 @@ def gen_random_nums():
     curr_num = 200
     while i < 1000:
         if i %100 == 0: # simulate spikes
-            curr_num += random.randint(100, 150)
+            curr_num += random.randint(300, 600)
             curr_num = max(0, curr_num)
             curr_num = min(curr_num, 1023)
         else:
@@ -33,13 +33,14 @@ def gen_random_nums():
         i += 1
         rand_nums.append(curr_num)
     plt.plot(range(0, 1000), rand_nums, label="rand")
-    
+
+
 class Moving_Average:
     """
         The Moving Average class serves as a different way of reading a numbers.
     """
     def __init__(self):
-        self.values = [275, 275, 275, 275, 275, 275, 275, 275]
+        self.values = [275] * MOVING_AVERAGE_BUFFER
         self.counter = 0
         self.sum = DEFAULT_RELAXTHRESH * MOVING_AVERAGE_BUFFER
         self.results = []
@@ -77,10 +78,10 @@ class Smooth_Read:
     def read_val(self, current_beginning):
         # instantiate necessary variables
         sum = 0
-        
+        print("curr_begin = ", current_beginning)
         # read in vals
         for i in range(SMOOTH_READS):
-            sum += rand_nums[current_beginning + i]# TODO: read in value
+            sum += rand_nums[current_beginning + i]
 
         # compute avg
         avg = sum / SMOOTH_READS
@@ -110,11 +111,18 @@ if __name__ == '__main__':
     plt.plot(range(0, 1000), ma.results, label="ma")
     
     # test smooth read
-    for i in range(0, 1000, 8):
+    for i in range(0, 1000, SMOOTH_READS):
         sr.read_val(i)
+
+    # print array lengths
+    print("MA.results.length", len(ma.results))
+    print("SR.results.length", len(sr.results))
+
     
     # plot values
-    plt.plot(range(0, 1000, 8), sr.results, label="sr")
+    #sr.results.pop()
+    
+    plt.plot(range(MOVING_AVERAGE_BUFFER, 1000 + MOVING_AVERAGE_BUFFER, MOVING_AVERAGE_BUFFER), sr.results, label="sr")
 
     
     plt.legend()
