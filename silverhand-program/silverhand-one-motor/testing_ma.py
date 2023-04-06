@@ -18,7 +18,7 @@ def gen_random_nums():
     curr_num = 200
     while i < 1000:
         if i %100 == 0: # simulate spikes
-            curr_num += random.randint(300, 600)
+            curr_num += random.randint(100, 150)
             curr_num = max(0, curr_num)
             curr_num = min(curr_num, 1023)
         else:
